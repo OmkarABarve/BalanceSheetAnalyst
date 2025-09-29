@@ -30,11 +30,27 @@ export interface User {
     company_id: string
     year: number
     pdf_storage_path: string
-    uploaded_at: string
-    // Joined data from related tables
-    company?: Company
+    uploaded_by: string
+    
+    // Financial data (matches your DB schema)
+    total_assets: number
+    total_liabilities: number
+    total_equity: number
+    assets_breakdown: any
+    liabilities_breakdown: any
+    equity_breakdown: any
+    
+    // Metadata
+    notes?: string
+    currency: string
+    
+    // Timestamps
+    created_at: string
+    updated_at: string
+    
+    // Optional joined data (if you add these tables later)
     extracted_text: string
-    balance_sheet_data?: BalanceSheetData[]
+    company?: Company
   }
   
   // Updated to match your balance_sheet_data table

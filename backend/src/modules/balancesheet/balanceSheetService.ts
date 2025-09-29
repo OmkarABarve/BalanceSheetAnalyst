@@ -1,4 +1,5 @@
-import { supabaseClient } from '../../database/supabaseClient'
+// backend/src/modules/balancesheet/balanceSheetService.ts
+import { SupabaseService } from '../../database/supabaseClient'
 import { 
   BalanceSheet, 
   BalanceSheetData, 
@@ -15,10 +16,12 @@ import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class BalanceSheetService {
+  constructor(private supabaseService: SupabaseService) {}
   // Get all balance sheets for a user's companies
+
   async getBalanceSheets(userId: string): Promise<BalanceSheet[]> {
     // First get user's company roles to know which companies they have access to
-    const { data: userCompanies } = await supabaseClient
+    const { data: userCompanies } = await this.supabaseService.getClient()
       .from('user_company_roles')
       .select('company_id')
       .eq('user_id', userId)
@@ -29,7 +32,7 @@ export class BalanceSheetService {
 
     const companyIds = userCompanies.map(uc => uc.company_id)
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('balance_sheets')
       .select(`
         *,
@@ -48,12 +51,12 @@ export class BalanceSheetService {
     }
 
     return data || []
-  },
+  }
 
   // Get a single balance sheet with its data
   async getBalanceSheet(id: string, userId: string): Promise<BalanceSheet | null> {
     // First check if user has access to this balance sheet
-    const { data: balanceSheet, error: bsError } = await supabaseClient
+    const { data: balanceSheet, error: bsError } = await this.supabaseService.getClient()
       .from('balance_sheets')
       .select(`
         *,
@@ -74,7 +77,7 @@ export class BalanceSheetService {
     }
 
     // Check if user has access to this company
-    const { data: userCompany } = await supabaseClient
+    const { data: userCompany } = await this.supabaseService.getClient()
       .from('user_company_roles')
       .select('company_id')
       .eq('user_id', userId)
@@ -92,11 +95,11 @@ export class BalanceSheetService {
       ...balanceSheet,
       balance_sheet_data: balanceSheetData
     }
-  },
+  }
 
   // Get balance sheet data entries for a balance sheet
   async getBalanceSheetData(balanceSheetId: string): Promise<BalanceSheetData[]> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('balance_sheet_data')
       .select(`
         *,
@@ -114,7 +117,7 @@ export class BalanceSheetService {
     }
 
     return data || []
-  },
+  } 
 
   // Create a new balance sheet
   async createBalanceSheet(
@@ -122,7 +125,7 @@ export class BalanceSheetService {
     userId: string
   ): Promise<BalanceSheet> {
     // Verify user has access to the company
-    const { data: userCompany } = await supabaseClient
+    const { data: userCompany } = await this.supabaseService.getClient()
       .from('user_company_roles')
       .select('company_id')
       .eq('user_id', userId)
@@ -133,7 +136,7 @@ export class BalanceSheetService {
       throw new Error('Access denied to create balance sheets for this company')
     }
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('balance_sheets')
       .insert({
         ...balanceSheetData,
@@ -155,13 +158,13 @@ export class BalanceSheetService {
     }
 
     return data
-  },
+  }
 
   // Create balance sheet data entry
   async createBalanceSheetData(
     dataEntry: CreateBalanceSheetDataEntry
   ): Promise<BalanceSheetData> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('balance_sheet_data')
       .insert(dataEntry)
       .select(`
@@ -180,13 +183,13 @@ export class BalanceSheetService {
     }
 
     return data
-  },
+  }
 
   // Create vector embedding
   async createVectorEmbedding(
     embeddingData: CreateVectorEmbeddingData
   ): Promise<VectorEmbedding> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('vector_embeddings')
       .insert(embeddingData)
       .select()
@@ -198,11 +201,11 @@ export class BalanceSheetService {
     }
 
     return data
-  },
+  }
 
   // Get vector embeddings for a balance sheet data entry
   async getVectorEmbeddings(balanceSheetDataId: string): Promise<VectorEmbedding[]> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('vector_embeddings')
       .select()
       .eq('balance_sheet_data_id', balanceSheetDataId)
@@ -213,7 +216,7 @@ export class BalanceSheetService {
     }
 
     return data || []
-  },
+  }
 
   // Search similar content using vector similarity
   async searchSimilarContent(
@@ -223,7 +226,7 @@ export class BalanceSheetService {
   ): Promise<{ embedding: VectorEmbedding; similarity: number }[]> {
     // This would typically use pgvector for similarity search
     // For now, returning a placeholder implementation
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('vector_embeddings')
       .select(`
         *,
@@ -248,11 +251,11 @@ export class BalanceSheetService {
       embedding,
       similarity: 0.8 // Placeholder similarity score
     }))
-  },
+  }
 
   // Get analysis metrics for a company
   async getAnalysisMetrics(companyId: string, year?: number): Promise<AnalysisMetric[]> {
-    let query = supabaseClient
+    let query = this.supabaseService.getClient()
       .from('analysis_metrics')
       .select()
       .eq('company_id', companyId)
@@ -269,13 +272,13 @@ export class BalanceSheetService {
     }
 
     return data || []
-  },
+  }
 
   // Create analysis metric
   async createAnalysisMetric(
     metricData: CreateAnalysisMetricData
   ): Promise<AnalysisMetric> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('analysis_metrics')
       .insert(metricData)
       .select()
@@ -287,11 +290,11 @@ export class BalanceSheetService {
     }
 
     return data
-  },
+  }
 
   // Get companies accessible to a user
   async getUserCompanies(userId: string): Promise<Company[]> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('user_company_roles')
       .select(`
         companies (
@@ -309,8 +312,8 @@ export class BalanceSheetService {
 
     // Extract unique companies
     const companies = data?.map(item => item.companies).filter(Boolean) || []
-    return Array.from(new Map(companies.map(c => [c.id, c])).values())
-  },
+    return Array.from(new Map(companies.map((c: any) => [c.id, c])).values()) as Company[]
+  }
 
   // Get balance sheets by company
   async getBalanceSheetsByCompany(
@@ -318,7 +321,7 @@ export class BalanceSheetService {
     userId: string
   ): Promise<BalanceSheet[]> {
     // Verify user has access to this company
-    const { data: userCompany } = await supabaseClient
+    const { data: userCompany } = await this.supabaseService.getClient()
       .from('user_company_roles')
       .select('company_id')
       .eq('user_id', userId)
@@ -329,7 +332,7 @@ export class BalanceSheetService {
       throw new Error('Access denied to balance sheets for this company')
     }
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('balance_sheets')
       .select(`
         *,
@@ -348,7 +351,7 @@ export class BalanceSheetService {
     }
 
     return data || []
-  },
+  }
 
   // Get balance sheets by year
   async getBalanceSheetsByYear(
@@ -363,7 +366,7 @@ export class BalanceSheetService {
       return []
     }
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await this.supabaseService.getClient()
       .from('balance_sheets')
       .select(`
         *,
@@ -382,7 +385,7 @@ export class BalanceSheetService {
     }
 
     return data || []
-  },
+  }
 
   // Extract financial data from balance sheet data entries
   extractFinancialData(balanceSheetData: BalanceSheetData[]): {
@@ -406,7 +409,7 @@ export class BalanceSheetService {
     }
 
     return result
-  },
+  }
 
   // Calculate financial ratios from extracted data
   calculateRatios(financialData: any) {
@@ -422,96 +425,98 @@ export class BalanceSheetService {
       equity_ratio: totalAssets !== 0 ? totalEquity / totalAssets : 0,
       debt_ratio: totalAssets !== 0 ? totalLiabilities / totalAssets : 0,
     }
-  }  
-  // Add this method before the closing brace of BalanceSheetService class
-async uploadBalanceSheet(
-  file: Express.Multer.File,
-  companyId: string,
-  year: number,
-  userId: string
-): Promise<BalanceSheet> {
-  try {
-    // 1. Upload file to Supabase Storage
-    const fileExt = file.originalname.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-    const filePath = `balance-sheets/${companyId}/${year}/${fileName}`
+  } 
 
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-      .from('balance-sheet-pdfs')
-      .upload(filePath, file.buffer, {
-        contentType: file.mimetype,
-        upsert: false
-      })
+  // Upload balance sheet and process for RAG
+  async uploadBalanceSheet(
+    file: Express.Multer.File,
+    companyId: string,
+    year: number,
+    userId: string
+  ): Promise<BalanceSheet> {
+    try {
+      // 1. Upload file to Supabase Storage
+      const fileExt = file.originalname.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `balance-sheets/${companyId}/${year}/${fileName}`
 
-    if (uploadError) {
-      throw new Error(`File upload failed: ${uploadError.message}`)
+      const { data: uploadData, error: uploadError } = await this.supabaseService.getClient().storage
+        .from('balance-sheet-pdfs')
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false
+        })
+
+      if (uploadError) {
+        throw new Error(`File upload failed: ${uploadError.message}`)
+      }
+
+      // 2. Create balance sheet record
+      const balanceSheetData: CreateBalanceSheetData = {
+        company_id: companyId,
+        year: year,
+        pdf_storage_path: filePath,
+        uploaded_by: userId
+      }
+
+      const { data: balanceSheet, error: bsError } = await this.supabaseService.getClient()
+        .from('balance_sheets')
+        .insert(balanceSheetData)
+        .select()
+        .single()
+
+      if (bsError) {
+        // Clean up uploaded file if database insert fails
+        await this.supabaseService.getClient().storage.from('balance-sheet-pdfs').remove([filePath])
+        throw new Error(`Failed to create balance sheet record: ${bsError.message}`)
+      }
+
+      // 3. Process PDF and extract text (you'll need PDF processing library)
+      // This is a placeholder - you'll need to implement PDF text extraction
+      const extractedText = await this.extractTextFromPDF(file.buffer)
+      
+      // 4. Create balance sheet data entry
+      const balanceSheetDataEntry: CreateBalanceSheetDataEntry = {
+        balance_sheet_id: balanceSheet.id,
+        data: {}, // Extracted structured data
+        extracted_text: extractedText
+      }
+
+      const { data: bsDataEntry, error: dataError } = await this.supabaseService.getClient()
+        .from('balance_sheet_data')
+        .insert(balanceSheetDataEntry)
+        .select()
+        .single()
+
+      if (dataError) {
+        throw new Error(`Failed to create balance sheet data: ${dataError.message}`)
+      }
+
+      // 5. Create vector embeddings for RAG
+      await this.createVectorEmbeddings(bsDataEntry.id, extractedText)
+
+      return balanceSheet
+    } catch (error) {
+      console.error('Error uploading balance sheet:', error)
+      throw error
     }
-
-    // 2. Create balance sheet record
-    const balanceSheetData: CreateBalanceSheetData = {
-      company_id: companyId,
-      year: year,
-      pdf_storage_path: filePath,
-      uploaded_by: userId
-    }
-
-    const { data: balanceSheet, error: bsError } = await supabaseClient
-      .from('balance_sheets')
-      .insert(balanceSheetData)
-      .select()
-      .single()
-
-    if (bsError) {
-      // Clean up uploaded file if database insert fails
-      await supabaseClient.storage.from('balance-sheet-pdfs').remove([filePath])
-      throw new Error(`Failed to create balance sheet record: ${bsError.message}`)
-    }
-
-    // 3. Process PDF and extract text (you'll need PDF processing library)
-    // This is a placeholder - you'll need to implement PDF text extraction
-    const extractedText = await this.extractTextFromPDF(file.buffer)
-    
-    // 4. Create balance sheet data entry
-    const balanceSheetDataEntry: CreateBalanceSheetDataEntry = {
-      balance_sheet_id: balanceSheet.id,
-      data: {}, // Extracted structured data
-      extracted_text: extractedText
-    }
-
-    const { data: bsDataEntry, error: dataError } = await supabaseClient
-      .from('balance_sheet_data')
-      .insert(balanceSheetDataEntry)
-      .select()
-      .single()
-
-    if (dataError) {
-      throw new Error(`Failed to create balance sheet data: ${dataError.message}`)
-    }
-
-    // 5. Create vector embeddings for RAG
-    await this.createVectorEmbeddings(bsDataEntry.id, extractedText)
-
-    return balanceSheet
-  } catch (error) {
-    console.error('Error uploading balance sheet:', error)
-    throw error
   }
-}
 
-// Helper method for PDF text extraction (you'll need to implement this)
-private async extractTextFromPDF(fileBuffer: Buffer): Promise<string> {
-  // TODO: Implement PDF text extraction
-  // You can use libraries like pdf-parse, pdf2pic, or similar
-  // For now, return placeholder
-  return "PDF text extraction not yet implemented"
-},
+  // Helper method for PDF text extraction (you'll need to implement this)
+  private async extractTextFromPDF(fileBuffer: Buffer): Promise<string> {
+    // TODO: Implement PDF text extraction
+    // You can use libraries like pdf-parse, pdf2pic, or similar
+    // For now, return placeholder
+    return "PDF text extraction not yet implemented"
+  }
 
-// Helper method for creating vector embeddings (you'll need to implement this)
-private async createVectorEmbeddings(balanceSheetDataId: string, text: string): Promise<void> {
-  // TODO: Implement text chunking and embedding creation
-  // Use your RAG service here
-  console.log('Vector embedding creation not yet implemented for:', balanceSheetDataId)
-}
+  // Helper method for creating vector embeddings (you'll need to implement this)
+  private async createVectorEmbeddings(balanceSheetDataId: string, text: string): Promise<void> {
+    // TODO: Implement text chunking and embedding creation
+    // Use your RAG service here
+    console.log('Vector embedding creation not yet implemented for:', balanceSheetDataId)
+  }
+
   // Get dashboard statistics for a user
   async getDashboardStats(userId: string) {
     const balanceSheets = await this.getBalanceSheets(userId)
@@ -542,5 +547,5 @@ private async createVectorEmbeddings(balanceSheetDataId: string, text: string): 
       totalLiabilities: financialData.totalLiabilities || 0,
       totalEquity: financialData.totalEquity || 0,
     }
-  },
+  }
 }

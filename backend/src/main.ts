@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
-import { AppModule } from './modules/appModule'
+import { AppModule } from './appModule'
 import 'reflect-metadata'
 
 
@@ -18,6 +18,7 @@ async function bootstrap() {
   
   await app.listen(3001)
   console.log('Backend running on http://localhost:3001')
+  
 }
 
 bootstrap()

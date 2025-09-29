@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Profile from './pages/Profile'
+import {Navbar} from './components/Navbar'
+import {Login} from './pages/Login'
+import {Dashboard} from './pages/Dashboard'
+import {Profile} from './pages/Profile'
 
 function App() {
   return (
@@ -22,4 +22,4 @@ function App() {
   )
 }
 
-export default App
+export default App  

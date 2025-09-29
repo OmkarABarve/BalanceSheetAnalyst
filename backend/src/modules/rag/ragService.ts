@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
-import { SupabaseVectorStore } from 'langchain/vectorstores/supabase'
-import { supabaseClient } from '../../database/supabaseClient'
+import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
+import { SupabaseService } from '../../database/supabaseClient'
 //./ragController
 import { BalanceSheetService } from '../balancesheet/balanceSheetService'
 import { combineDocs } from './ragUtil'
-
+    
 @Injectable()
 export class RAGService {
-  constructor(private readonly balanceSheetService: BalanceSheetService) {}
+  constructor(
+    private readonly balanceSheetService: BalanceSheetService,
+    private readonly supabaseService: SupabaseService
+  ) {}
 
   async processForRAG(file: Express.Multer.File, userId: string) {
     try {
@@ -43,7 +46,7 @@ export class RAGService {
     })
 
     const vectorStore = new SupabaseVectorStore(embeddings, {
-      client: supabaseClient,
+      client: this.supabaseService.getClient(),
       tableName: "Vector_Embeddings",
       queryName: "match_documents",
     })

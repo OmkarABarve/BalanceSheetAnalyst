@@ -66,6 +66,7 @@ export interface CreateBalanceSheetData {
   company_id: string
   year: number
   pdf_storage_path: string
+  uploaded_by: string
 }
 
 export interface CreateBalanceSheetDataEntry {

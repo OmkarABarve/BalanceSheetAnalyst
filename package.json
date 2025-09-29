@@ -4,9 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    
     "build": "vite build",
     "lint": "eslint . --ext js,jsx,ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "dev": "concurrently \"cd backend && npm run start:dev\" \"npm run dev\"",
+    "dev:frontend": "vite",
+    "dev:backend": "cd backend && npm run start:dev",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,6 +18,7 @@
     "@langchain/google-genai": "^0.2.18",
     "@supabase/supabase-js": "^2.38.0",
     "ai": "^5.0.56",
+    "concurrent": "^0.3.2",
     "langchain": "^0.3.34",
     "react": "^18.3.1",
     "react-dom": "^18.2.0",

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { supabase } from '../../database/supabaseClient'
+import { supabaseClient } from '../../database/supabaseClient'
 
 @Injectable()
 export class AuthService {
   async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password,
     })
@@ -12,7 +12,7 @@ export class AuthService {
   }
 
   async signUp(email: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
     })
@@ -20,13 +20,13 @@ export class AuthService {
   }
 
   async signOut() {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabaseClient.auth.signOut()
     return { error }
   }
 
   async getCurrentUser(userId?: string) {
     if (userId) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient  
         .from('users')
         .select('*')
         .eq('id', userId)

@@ -6,6 +6,9 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
+    "dev": "concurrently \"cd backend && npm run start:dev\" \"npm run dev\"",
+    "dev:frontend": "npm run dev",
+    "dev:backend": "cd backend && npm run start:dev",
     "start:prod": "node dist/main"
   },
   "dependencies": {

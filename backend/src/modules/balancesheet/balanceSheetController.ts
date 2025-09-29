@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Query, Body, Param } from '@nestjs/common'
-import { alanceSheetService } from './balanceSheetService'
+import { Controller, Get, Post, Query, Body, Param, UseInterceptors, UploadedFile } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { BalanceSheetService } from './balanceSheetService'
 import { CreateBalanceSheetData } from '../../types'
 
 @Controller('balance-sheets')
@@ -12,21 +13,29 @@ export class BalanceSheetController {
   }
 
   @Get(':id')
-  async getBalanceSheet(@Param('id') id: string) {
-    return this.balanceSheetService.getBalanceSheet(id)
+  async getBalanceSheet(
+    @Param('id') id: string,
+    @Query('userId') userId: string
+  ) {
+    return this.balanceSheetService.getBalanceSheet(id, userId)
   }
 
   @Post()
-  async createBalanceSheet(@Body() data: CreateBalanceSheetData) {
-    return this.balanceSheetService.createBalanceSheet(data)
+  async createBalanceSheet(
+    @Body() data: CreateBalanceSheetData,
+    @Query('userId') userId: string
+  ) {
+    return this.balanceSheetService.createBalanceSheet(data, userId)
   }
 
   @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
   async uploadBalanceSheet(
-    @Body() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Body('companyId') companyId: string,
-    @Body('year') year: number
+    @Body('year') year: number,
+    @Query('userId') userId: string
   ) {
-    return this.balanceSheetService.uploadBalanceSheet(file, companyId, year)
+    return this.balanceSheetService.uploadBalanceSheet(file, companyId, year, userId)
   }
 }

@@ -27,6 +27,5 @@
       "@/*": ["frontend/src/*"]
     }
   },
-  "include": ["frontend/src", "backend/services", "backend/src/modules/chat/balanceSheetService.ts", "backe, "backend/src/modules/auth/dataService.ts", "backend/src/modules/auth/userService.ts"nd/src/modules/chat/chatService.ts", "backend/src/database/supabaseClient.ts"],
   //"references": [{ "path": "./tsconfig.node.json" }]
 }

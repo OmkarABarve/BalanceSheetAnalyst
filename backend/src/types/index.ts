@@ -33,6 +33,7 @@ export interface User {
     uploaded_at: string
     // Joined data from related tables
     company?: Company
+    extracted_text: string
     balance_sheet_data?: BalanceSheetData[]
   }
   
@@ -77,6 +78,7 @@ export interface User {
     company_id: string
     year: number
     pdf_storage_path: string
+    uploaded_by: string
   }
   
   export interface CreateBalanceSheetDataEntry {

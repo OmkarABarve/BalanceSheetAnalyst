@@ -13,14 +13,19 @@ async function bootstrap() {
   // Global validation
   //app.useGlobalPipes(new ValidationPipe())
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // Allow both ports
+    origin: [
+      process.env.FRONTEND_ORIGIN,
+      'http://localhost:3000', 
+      'http://localhost:5173'
+    ].filter(Boolean),
     credentials: true,
   })
-
   
-  await app.listen(3001)
-  console.log('Backend running on http://localhost:3001')
-  console.log('Frontend running on http://localhost:3000')
+  const port = Number(process.env.PORT) || 3001
+  await app.listen(port, '0.0.0.0')
+  
+  console.log(`Backend running on port ${port}`)
+  console.log('Frontend origin:', process.env.FRONTEND_ORIGIN || 'localhost')
   
 }
 

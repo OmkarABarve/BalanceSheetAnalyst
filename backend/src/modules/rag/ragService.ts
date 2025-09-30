@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
-import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
+//import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
 import { SupabaseService } from '../../database/supabaseClient'
 //./ragController
 import { BalanceSheetService } from '../balancesheet/balanceSheetService'

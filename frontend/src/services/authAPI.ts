@@ -1,4 +1,4 @@
-const API_BASE_URL ='http://localhost:3001'
+import type { User } from '../types'
 
 export interface SignInRequest {
   email: string
@@ -10,32 +10,59 @@ export interface SignUpRequest {
   password: string
 }
 
-export async function signIn(credentials: SignInRequest) {
-  const response = await fetch(`${API_BASE_URL}/auth/signin`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials)
-  })
-  return response.json()
-}
+const STORAGE_KEY = 'bsa_user'
 
-export async function signUp(credentials: SignUpRequest) {
-  const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials)
-  })
-  return response.json()
-}
-
-export async function getCurrentUser() {
-  const response = await fetch(`${API_BASE_URL}/auth/me`)
-  return response.json()
-}
-export async function signOut() {
-    const response = await fetch(`${API_BASE_URL}/auth/signout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return response.json()
+function readStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as User) : null
+  } catch {
+    return null
   }
+}
+
+function writeStoredUser(user: User | null) {
+  if (!user) {
+    localStorage.removeItem(STORAGE_KEY)
+    return
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+}
+
+export async function signIn(credentials: SignInRequest): Promise<{ data: { user: User } | null; error: any | null }> {
+  const existing = readStoredUser()
+  if (existing && existing.email.toLowerCase() === credentials.email.toLowerCase()) {
+    return { data: { user: existing }, error: null }
+  }
+  // Create a lightweight user on first sign in for mock auth
+  const now = new Date().toISOString()
+  const user: User = {
+    id: crypto.randomUUID(),
+    email: credentials.email,
+    created_at: now,
+    updated_at: now,
+  }
+  writeStoredUser(user)
+  return { data: { user }, error: null }
+}
+
+export async function signUp(credentials: SignUpRequest): Promise<{ data: { user: User } | null; error: any | null }> {
+  const now = new Date().toISOString()
+  const user: User = {
+    id: crypto.randomUUID(),
+    email: credentials.email,
+    created_at: now,
+    updated_at: now,
+  }
+  writeStoredUser(user)
+  return { data: { user }, error: null }
+}
+
+export async function getCurrentUser(): Promise<User | null> {
+  return readStoredUser()
+}
+
+export async function signOut(): Promise<{ error: any | null }> {
+  writeStoredUser(null)
+  return { error: null }
+}

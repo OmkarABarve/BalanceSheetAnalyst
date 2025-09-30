@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { User } from '../types'
-import { signIn, signUp, getCurrentUser, /*signOut*/ } from '../services/authAPI'
+import { signIn, signUp, getCurrentUser, signOut } from '../services/authAPI'
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null)
@@ -51,16 +51,14 @@ export const useAuth = () => {
   const signOutUser = async () => {
     try {
       const result = await signOut()
-      
       if (!result.error) {
         setUser(null)
         return { error: null }
       }
-      
       return { error: result.error }
     } catch (error) {
       console.error('Sign out error:', error)
-      return { error: 'Network error occurred' }
+      return { error: 'Unexpected error occurred' }
     }
   }
 
@@ -69,6 +67,6 @@ export const useAuth = () => {
     loading,
     signIn: signInUser,
     signUp: signUpUser,
-   // signOut: signOutUser,
+    signOut: signOutUser,
   }
 }

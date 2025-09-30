@@ -11,11 +11,13 @@ async function bootstrap() {
   
   
   // Global validation
-  app.useGlobalPipes(new ValidationPipe())
+  //app.useGlobalPipes(new ValidationPipe())
   app.enableCors({
     origin: ['http://localhost:3000', 'http://localhost:5173'], // Allow both ports
     credentials: true,
   })
+
+  
   await app.listen(3001)
   console.log('Backend running on http://localhost:3001')
   console.log('Frontend running on http://localhost:3000')

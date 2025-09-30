@@ -23,6 +23,6 @@ export class AuthController {
 
   @Get('me')
   async getCurrentUser(@Req() request: any) {
-    return this.authService.getCurrentUser(request.user?.id)
+    return this.authService.getCurrentUser(/*request.user?.id*/)
   }
 }

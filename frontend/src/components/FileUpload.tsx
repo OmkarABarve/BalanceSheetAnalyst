@@ -111,7 +111,20 @@ export const FileUpload = ({
           type="file"
           accept={accept}
           multiple={multiple}
-          onChange={(e) => handleFiles(e.target.files)}
+          onChange={(e) => {
+            console.log('[FileUpload:onChange] fired', { time: e.timeStamp })
+            if (disabled) { console.warn('[FileUpload:onChange] ignored (disabled)'); return }
+            const files = e.currentTarget.files
+            console.log('[FileUpload:onChange] files:', files)
+            if (!files || files.length === 0) {
+              console.warn('[FileUpload:onChange] no file selected')
+              return
+            }
+            const file = files[0]
+            console.log('[FileUpload:onChange] selected:', { name: file.name, size: file.size, type: file.type })
+            handleFiles(files)
+            e.currentTarget.value = ''
+          }}
           className="hidden"
           disabled={disabled}
         />

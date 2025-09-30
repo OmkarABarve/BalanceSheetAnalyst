@@ -12,11 +12,14 @@ import {
   Company,
   User
 } from '../../types'
-import { Injectable } from '@nestjs/common'
-
+import { Inject, Injectable } from '@nestjs/common'
+import { RAGService } from '../rag/ragService'
+import { forwardRef } from '@nestjs/common'
 @Injectable()
 export class BalanceSheetService {
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(private supabaseService: SupabaseService, 
+   
+    private ragService: RAGService) {}
   // Get all balance sheets for a user's companies
 
   async getBalanceSheets(userId: string): Promise<BalanceSheet[]> {
@@ -473,7 +476,7 @@ export class BalanceSheetService {
 
       // 3. Process PDF and extract text (you'll need PDF processing library)
       // This is a placeholder - you'll need to implement PDF text extraction
-      const extractedText = await this.extractTextFromPDF(file.buffer)
+      const extractedText = await this.ragService.extractTextFromPDF(file.buffer)
       
       // 4. Create balance sheet data entry
       const balanceSheetDataEntry: CreateBalanceSheetDataEntry = {
@@ -512,9 +515,26 @@ export class BalanceSheetService {
 
   // Helper method for creating vector embeddings (you'll need to implement this)
   private async createVectorEmbeddings(balanceSheetDataId: string, text: string): Promise<void> {
-    // TODO: Implement text chunking and embedding creation
-    // Use your RAG service here
-    console.log('Vector embedding creation not yet implemented for:', balanceSheetDataId)
+    try {
+      // Create text chunks from extracted text
+      //const ragService = new RAGService(this, this.supabaseService)
+      const chunks = await this.ragService.createTextChunks(text)
+      
+      // Generate embeddings
+      const embeddings = await this.ragService.generateEmbeddings(chunks)
+      
+      // Store embeddings in vector database
+      await this.ragService.storeEmbeddings(embeddings, {
+        userId: '', // You can modify this if you want user-specific, or make it optional
+        balanceSheetId: balanceSheetDataId,
+        filename: 'uploaded_balance_sheet.pdf'
+      })
+      
+      console.log(`✅ Created ${embeddings.length} embeddings for balance sheet ${balanceSheetDataId}`)
+    } catch (error) {
+      console.error('Error creating vector embeddings:', error)
+      // Don't throw error - allow upload to succeed even if embeddings fail
+    }
   }
 
   // Get dashboard statistics for a user

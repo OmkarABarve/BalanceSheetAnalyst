@@ -3,11 +3,12 @@ import { useAuth } from '../hooks/useAuth'
 import { Button } from './Button'
 
 export const Navbar = () => {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const location = useLocation()
 
-  const handleSignOut = async () => {
-    await signOut()
+  // Auth is disabled; provide a safe no-op handler to avoid runtime errors
+  const handleSignOut = () => {
+    console.log('Sign out clicked (mock)')
   }
 
   return (

@@ -1,10 +1,9 @@
-// frontend/src/pages/Dashboard.tsx
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { FileUpload } from '../components/FileUpload'
 import { Button } from '../components/Button'
 import { askChat } from '../services/chatAPI'
-import { uploadBalanceSheet } from '../services/balanceSheetAPI'
+import { processPDFForRAG } from '../services/balanceSheetAPI' // RAG API is already here
 
 export const Dashboard = () => {
   const { user } = useAuth()
@@ -28,26 +27,28 @@ export const Dashboard = () => {
           <p className="text-gray-600 text-lg">
             Please sign in to access your dashboard.
           </p>
+          <div className="mt-6 flex justify-center">
+            <Link to="/login">
+              <Button className="px-8 py-3 text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                Sign In
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
-  const handleFileUpload = async () => {
-    if (!selectedFile) {
-      alert('Please select a PDF file first')
-      return
-    }
-
+  const handleFileUpload = async (file: File) => {
     setUploadLoading(true)
     try {
-      await uploadBalanceSheet(selectedFile, 'default', new Date().getFullYear())
-      setUploadSuccess('Balance sheet uploaded successfully!')
+      await processPDFForRAG(file, 'default', new Date().getFullYear(), user?.id)
+      setUploadSuccess('PDF processed and ready for questions!')
       setSelectedFile(null)
       setTimeout(() => setUploadSuccess(''), 3000)
-    } catch (error) {
+    } catch (error:unknown) {
       console.error('Upload failed:', error)
-      alert('Upload failed. Please try again.')
+      alert(`Upload failed: ${error}`)
     } finally {
       setUploadLoading(false)
     }
@@ -85,16 +86,16 @@ export const Dashboard = () => {
         </div>
 
         {/* Main Chat Section */}
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">AI Assistant</h2>
-            
+
             {/* Chat Messages */}
             <div className="mb-6 h-96 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
               {chatHistory.length === 0 && !chatResponse ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-6xl mb-4">🤖</div>
-                  <p className="text-lg">Ask me anything about your balance sheets!</p>
+                  <p className="text-lg">Upload a PDF and ask me anything about your balance sheets!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -129,9 +130,8 @@ export const Dashboard = () => {
               {/* Upload Button - Small and Compact */}
               <div className="flex justify-center">
                 <label className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors">
-                  
                   <span className="text-sm font-medium text-gray-700">
-                    {uploadLoading ? 'Uploading...' : 'Upload PDF'}
+                    {uploadLoading ? 'Processing...' : 'Upload PDF'}
                   </span>
                   <input
                     type="file"
@@ -140,7 +140,7 @@ export const Dashboard = () => {
                       const file = e.target.files?.[0]
                       if (file) {
                         setSelectedFile(file)
-                        handleFileUpload()
+                        handleFileUpload(file)
                       }
                     }}
                     className="hidden"
@@ -160,7 +160,7 @@ export const Dashboard = () => {
                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={chatLoading}
                   />
-                  <Button 
+                  <Button
                     type="submit"
                     disabled={!question.trim() || chatLoading}
                     className="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-200"

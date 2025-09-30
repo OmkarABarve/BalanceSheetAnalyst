@@ -24,6 +24,7 @@
     "class-validator": "^0.14.0",
     "langchain": "^0.3.35",
     "multer": "^2.0.2",
+    "pdf-parse": "^1.1.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },

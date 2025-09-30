@@ -19,7 +19,7 @@ export class RAGService {
       // Use BalanceSheetService to handle upload and text extraction
       const processedData = await this.balanceSheetService.uploadBalanceSheet(file, '', 0, userId)
       
-      // Create text chunks from extracted text
+      // Create text chunks from extracted text+
       const chunks = await this.createTextChunks(processedData.extracted_text)
       
       // Generate embeddings
@@ -47,7 +47,7 @@ export class RAGService {
 
     const vectorStore = new SupabaseVectorStore(embeddings, {
       client: this.supabaseService.getClient(),
-      tableName: "Vector_Embeddings",
+      tableName: "Vector_embeddings",
       queryName: "match_documents",
     })
 
@@ -56,7 +56,7 @@ export class RAGService {
 
     return combineDocs(docs)
   }
-
+////////////////////////////////////////////// PUBLIC IMPORTANT ABOVE,PRIVATE HELPERS BELOW ////////////////////////////////////////////
   private async createTextChunks(text: string): Promise<string[]> {
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
@@ -80,6 +80,16 @@ export class RAGService {
     }
     
     return results
+  }
+  private async extractTextFromPDF(fileBuffer: Buffer): Promise<string> {
+    const pdfParse = require('pdf-parse')
+    try {
+      const data = await pdfParse(fileBuffer)
+      return data.text
+    } catch (error) {
+      console.error('PDF extraction error:', error)
+      throw new Error('Failed to extract text from PDF')
+    }
   }
 
   private async storeEmbeddings(

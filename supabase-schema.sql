@@ -66,3 +66,40 @@ CREATE TRIGGER update_balance_sheets_updated_at
   BEFORE UPDATE ON balance_sheets
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Vector embeddings table for RAG
+CREATE TABLE IF NOT EXISTS vector_embeddings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  balance_sheet_data_id UUID, -- Optional: link to balance sheet data
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  embedding VECTOR(768), -- Google embeddings are 768 dimensions
+  chunk_text TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Balance sheet data table (for storing extracted text)
+CREATE TABLE IF NOT EXISTS balance_sheet_data (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  balance_sheet_id UUID REFERENCES balance_sheets(id) ON DELETE CASCADE,
+  data JSONB DEFAULT '{}',
+  extracted_text TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Analysis metrics table
+CREATE TABLE IF NOT EXISTS analysis_metrics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  company_id UUID NOT NULL,
+  year INTEGER NOT NULL,
+  metric_type TEXT NOT NULL,
+  value DECIMAL(15,2),
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable vector similarity search extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create indexes for vector similarity search
+CREATE INDEX ON vector_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);

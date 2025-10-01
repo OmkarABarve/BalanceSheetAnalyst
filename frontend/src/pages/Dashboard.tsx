@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/Button'
 import { askChat } from '../services/chatAPI'
-import { processPDFForRAG } from '../services/balanceSheetAPI' // RAG API is already here
+import { processPDFForRAG } from '../services/balanceSheetAPI'
 
 export const Dashboard = () => {
   const { user } = useAuth()
@@ -19,17 +19,17 @@ export const Dashboard = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-slate-800 mb-4">
             Welcome to Balance Sheet Analyst
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-slate-600 text-lg">
             Please sign in to access your dashboard.
           </p>
           <div className="mt-6 flex justify-center">
             <Link to="/login">
-              <Button className="px-8 py-3 text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button className="px-8 py-3 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                 Sign In
               </Button>
             </Link>
@@ -73,27 +73,27 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
             Balance Sheet Analyst
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-slate-600">
             Upload your balance sheet and ask me anything
           </p>
         </div>
 
         {/* Main Chat Section */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">AI Assistant</h2>
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6">AI Assistant</h2>
 
             {/* Chat Messages */}
-            <div className="mb-6 h-96 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div className="mb-6 h-96 overflow-y-auto border border-slate-200 rounded-xl p-4 bg-slate-50">
               {chatHistory.length === 0 && !chatResponse ? (
-                <div className="text-center text-gray-500 mt-8">
+                <div className="text-center text-slate-500 mt-8">
                   <div className="text-6xl mb-4">🤖</div>
                   <p className="text-lg">Upload a PDF and ask me anything about your balance sheets!</p>
                 </div>
@@ -101,17 +101,17 @@ export const Dashboard = () => {
                 <div className="space-y-4">
                   {chatHistory.map((chat, index) => (
                     <div key={index}>
-                      <div className="bg-blue-100 p-3 rounded-lg mb-2">
-                        <p className="text-blue-800"><strong>You:</strong> {chat.question}</p>
+                      <div className="bg-blue-50 p-4 rounded-xl mb-2 border border-blue-100">
+                        <p className="text-slate-700"><strong className="text-blue-700">You:</strong> {chat.question}</p>
                       </div>
-                      <div className="bg-gray-100 p-3 rounded-lg">
-                        <p className="text-gray-800"><strong>AI:</strong> {chat.response}</p>
+                      <div className="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                        <p className="text-slate-700"><strong className="text-slate-800">AI:</strong> {chat.response}</p>
                       </div>
                     </div>
                   ))}
                   {chatResponse && !chatHistory.find(chat => chat.response === chatResponse) && (
-                    <div className="bg-gray-100 p-3 rounded-lg">
-                      <p className="text-gray-800"><strong>AI:</strong> {chatResponse}</p>
+                    <div className="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                      <p className="text-slate-700"><strong className="text-slate-800">AI:</strong> {chatResponse}</p>
                     </div>
                   )}
                 </div>
@@ -120,17 +120,18 @@ export const Dashboard = () => {
 
             {/* Upload Success Message */}
             {uploadSuccess && (
-              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium">
                 {uploadSuccess}
               </div>
             )}
 
             {/* Chat Input and Upload */}
             <div className="space-y-4">
-              {/* Upload Button - Small and Compact */}
+              {/* Upload Button - Compact */}
               <div className="flex justify-center">
-                <label className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors">
-                  <span className="text-sm font-medium text-gray-700">
+                <label className="inline-flex items-center px-5 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors border border-slate-200">
+                 
+                  <span className="text-sm font-medium text-slate-700">
                     {uploadLoading ? 'Processing...' : 'Upload PDF'}
                   </span>
                   <input
@@ -157,13 +158,13 @@ export const Dashboard = () => {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="Ask a question about your balance sheet..."
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-700 placeholder-slate-400"
                     disabled={chatLoading}
                   />
                   <Button
                     type="submit"
                     disabled={!question.trim() || chatLoading}
-                    className="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-200"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {chatLoading ? '...' : 'Ask'}
                   </Button>

@@ -16,7 +16,8 @@ async function bootstrap() {
     origin: [
       process.env.FRONTEND_ORIGIN,
       'http://localhost:3000', 
-      'http://localhost:5173'
+      'http://localhost:5173',
+      'https://balancesheetanalyst.netlify.app'
     ].filter(Boolean),
     credentials: true,
   })

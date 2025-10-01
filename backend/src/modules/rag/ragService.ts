@@ -92,16 +92,16 @@ export class RAGService {
   async processPDFDirect(file: Express.Multer.File): Promise<{chunks: number, text: string}> {
     console.log('📄 Starting PDF processing:', file.originalname)
 
-    const useTextract = process.env.RAG_USE_TEXTRACT === 'true'
+    
     const useHeuristic = process.env.RAG_USE_DIGITAL_TABLES === 'true'
 
     // Base text via pdf-parse
     let extractedText = await this.extractTextFromPDF(file.buffer)
 
-    if (useTextract) {
+    
       // Will auto-fallback if SDK/env not available
-      extractedText = await this.extractStructuredTextFromPDF(file.buffer, file.originalname)
-    } else if (useHeuristic) {
+      extractedText = await this.extractTextFromPDF(file.buffer)
+     if (useHeuristic) {
       // AWS-free digital-PDF table heuristic; ignored for scanned PDFs
       const tablesMd = await this.extractDigitalTablesHeuristic(file.buffer)
       if (tablesMd && tablesMd.trim().length > 0) {
@@ -162,71 +162,7 @@ export class RAGService {
     }
   }
     
-  // Optional structured extraction via Textract (tables) + pdf-parse (flowing text)
-  // Loads AWS SDK lazily; if not installed or not configured, it simply returns flowing text.
-  public async extractStructuredTextFromPDF(fileBuffer: Buffer, originalName: string): Promise<string> {
-    const pdfParse = require('pdf-parse')
-
-    // 1) Fast flowing text for digital PDFs
-    let flowingText = ''
-    try {
-      const data = await pdfParse(fileBuffer)
-      flowingText = data.text || ''
-    } catch {}
-
-    // Try to load AWS SDK only when needed
-    let S3Client: any, PutObjectCommand: any, TextractClient: any, StartDocumentAnalysisCommand: any, GetDocumentAnalysisCommand: any
-    try {
-      ;({ S3Client, PutObjectCommand } = require('@aws-sdk/client-s3'))
-      ;({ TextractClient, StartDocumentAnalysisCommand, GetDocumentAnalysisCommand } = require('@aws-sdk/client-textract'))
-    } catch {
-      return flowingText
-    }
-
-    // 2) Tables via Textract (requires S3 + AWS creds); fall back gracefully
-    const region = process.env.AWS_REGION || 'us-east-1'
-    const bucket = process.env.TEXTRACT_BUCKET
-    if (!bucket) {
-      return flowingText
-    }
-
-    try {
-      const s3 = new S3Client({ region })
-      const key = `uploads/${Date.now()}_${originalName}`
-      await s3.send(new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        Body: fileBuffer,
-        ContentType: 'application/pdf'
-      }))
-
-      const textract = new TextractClient({ region })
-      const start = await textract.send(new StartDocumentAnalysisCommand({
-        DocumentLocation: { S3Object: { Bucket: bucket, Name: key } },
-        FeatureTypes: ['TABLES']
-      }))
-
-      const jobId = start.JobId!
-      let blocks: any[] = []
-      // Basic polling; for low usage this is fine
-      while (true) {
-        const res = await textract.send(new GetDocumentAnalysisCommand({ JobId: jobId }))
-        if (res.JobStatus === 'SUCCEEDED') {
-          blocks = res.Blocks || []
-          break
-        }
-        if (res.JobStatus === 'FAILED') throw new Error('Textract failed')
-        await new Promise(r => setTimeout(r, 1500))
-      }
-
-      const tablesMd = this.textractTablesToMarkdown(blocks)
-      const combined = [flowingText.trim(), tablesMd.trim()].filter(Boolean).join('\n\n')
-      return combined.length ? combined : flowingText
-    } catch (e) {
-      console.error('Textract table extraction failed, falling back:', e)
-      return flowingText
-    }
-  }
+  
 
   // AWS-free: heuristic table extraction for digital PDFs using pdf2json
   // Best-effort; scanned PDFs won't work here.
@@ -326,63 +262,7 @@ export class RAGService {
     return text
   }
 
-  private textractTablesToMarkdown(blocks: any[] = []): string {
-    const blockMap = new Map<string, any>()
-    for (const b of blocks) blockMap.set(b.Id, b)
-
-    const tables = blocks.filter(b => b.BlockType === 'TABLE')
-    const mdParts: string[] = []
-
-    const getTextForIds = (ids?: string[]): string => {
-      if (!ids) return ''
-      const words: string[] = []
-      for (const id of ids) {
-        const b = blockMap.get(id)
-        if (!b) continue
-        if (b.BlockType === 'WORD' && b.Text) words.push(b.Text)
-        if (b.BlockType === 'SELECTION_ELEMENT' && b.SelectionStatus === 'SELECTED') words.push('[x]')
-        if (b.Relationships) {
-          for (const r of b.Relationships) {
-            if (r.Type === 'CHILD') words.push(getTextForIds(r.Ids))
-          }
-        }
-      }
-      return words.join(' ').replace(/\s+/g, ' ').trim()
-    }
-
-    for (const table of tables) {
-      const rel = table.Relationships?.find((r: any) => r.Type === 'CHILD')
-      const cellBlocks = (rel?.Ids ?? [])
-        .map((id: string) => blockMap.get(id))
-        .filter((b: any) => b?.BlockType === 'CELL')
-
-      let maxRow = 0, maxCol = 0
-      for (const c of cellBlocks) {
-        maxRow = Math.max(maxRow, c.RowIndex || 0)
-        maxCol = Math.max(maxCol, c.ColumnIndex || 0)
-      }
-      const grid: string[][] = Array.from({ length: maxRow }, () => Array(maxCol).fill(''))
-
-      for (const c of cellBlocks) {
-        const childRel = c.Relationships?.find((r: any) => r.Type === 'CHILD')
-        const text = getTextForIds(childRel?.Ids)
-        grid[(c.RowIndex || 1) - 1][(c.ColumnIndex || 1) - 1] = text
-      }
-
-      const header = grid[0] ?? []
-      const divider = header.map(() => '---')
-      const body = grid.slice(1)
-
-      mdParts.push(
-        '| ' + header.map(v => v || ' ').join(' | ') + ' |',
-        '| ' + divider.join(' | ') + ' |',
-        ...body.map(row => '| ' + row.map(v => v || ' ').join(' | ') + ' |'),
-        ''
-      )
-    }
-    return mdParts.join('\n')
-  }
-
+  
   public async storeEmbeddings(
     embeddings: Array<{chunk: string, embedding: number[]}>,
     metadata: { userId: string, balanceSheetId: string, filename: string }
